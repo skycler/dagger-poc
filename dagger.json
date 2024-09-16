@@ -1,0 +1,12 @@
+{
+  "name": "monet",
+  "sdk": "python",
+  "dependencies": [
+    {
+      "name": "k3s",
+      "source": "github.com/marcosnils/daggerverse/k3s@6ebe41f68dbab3b0a5a10bc312216dec590ed720"
+    }
+  ],
+  "source": "dagger",
+  "engineVersion": "v0.13.0"
+}
