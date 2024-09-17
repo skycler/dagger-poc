@@ -11,6 +11,9 @@ from dagger import dag, function
 
 @function
 async def platform() -> dagger.Container:
+	"""
+	Deploy a k3s cluster and deploy some services using helm
+	"""
 	# Start a k3s server and get the kubeconfig
 	k3s = dag.k3_s("monet")
 	await k3s.server().start()
@@ -28,6 +31,14 @@ async def platform() -> dagger.Container:
 
 @function
 def helm_install(config: dagger.File, chart: str, version: str, repo: str) -> dagger.Container:
+	"""
+	Install a helm chart from a repository
+	
+	:param config: The kubeconfig file
+	:param chart: The chart name
+	:param version: The chart version
+	:param repo: The repository URL
+	"""
 	return (
 		deployer(config)
 		.with_exec(args=["helm", "pull", f"{repo}/{chart}", "--version", version, "--untar", "--plain-http"])
@@ -36,6 +47,11 @@ def helm_install(config: dagger.File, chart: str, version: str, repo: str) -> da
 
 @function
 def deployer(config: dagger.File) -> dagger.Container:
+	"""
+	Deployer container to interact with the cluster
+
+	:param config: The kubeconfig file
+	"""
 	return (
 		dag.container()
 		.from_("alpine/helm")
