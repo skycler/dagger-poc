@@ -1,41 +1,25 @@
 import asyncio
 import dagger
 from dagger import dag, function, object_type
-from pydantic import BaseModel
 
-# NOTE: it's recommended to move your code into other files in this package
-# and keep __init__.py for imports only, according to Python's convention.
-# The only requirement is that Dagger needs to be able to import a package
-# called "main", so as long as the files are imported here, they should be
-# available to Dagger.
-
-class Chart(BaseModel):
-	name: str
-	version: str
-	repo: str
-
-# List of charts to deploy
-CHARTS = [
-	Chart(name="nginx", version="18.1.14", repo="oci://registry-1.docker.io/bitnamicharts"),
-	Chart(name="rabbitmq", version="14.7.0", repo="oci://registry-1.docker.io/bitnamicharts"),
-	Chart(name="postgresql", version="15.5.31", repo="oci://registry-1.docker.io/bitnamicharts"),
-	#Chart(name="mp-model-platform-test", version="0.0.0", repo="oci://host.docker.internal:5001/helm")
-]
+from .settings import Settings
 
 @object_type
 class DaggerPoc:
 	k3s = dag.k3_s("monet")
 
 	@function
-	async def platform(self) -> dagger.Container:
+	async def platform(self, config: dagger.File | None = None) -> dagger.Container:
 		"""
 		Deploy a k3s cluster and deploy some services using helm
 		"""
+		# Load the settings
+		settings = Settings() if config is None else Settings.from_yaml(await config.contents())
 		# Start a k3s server and get the kubeconfig
 		await self.k3s.server().start()
 		kube_config = self.k3s.config()
 		# Deploy some services using helm
-		tasks = [self.helm_install(kube_config, chart.name, chart.version, chart.repo) for chart in CHARTS]
+		tasks = [self.helm_install(kube_config, chart.name, chart.version, chart.repo) for chart in settings.charts]
 		await asyncio.gather(*tasks)
 		# Return a container ready to interact with the cluster
 		return self.deployer(kube_config)
