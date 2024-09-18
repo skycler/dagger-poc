@@ -14,7 +14,15 @@ class Octant:
         :param push: Push the image to the registry
         """
         install_tmp_file = "/tmp/octant.deb"
-        arch = "ARM64" if platform.machine() == "ARM64" else "64bit"
+        match platform.machine():
+            case "arm64" | "aarch64":
+                arch = "ARM64"
+            case "x86_64" | "AMD64":
+                arch = "64bit"
+            case "arm" | "arm32":
+                arch = "ARM"
+            case _:
+                raise ValueError(f"Unsupported architecture: {platform.machine()}")
         return (
             dag.container()
             .from_("debian:buster-slim")
