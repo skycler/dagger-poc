@@ -1,3 +1,5 @@
+import platform
+
 import dagger
 from dagger import dag
 
@@ -12,14 +14,15 @@ class Octant:
         :param push: Push the image to the registry
         """
         install_tmp_file = "/tmp/octant.deb"
+        arch = "ARM64" if platform.machine() == "ARM64" else "64bit"
         return (
             dag.container()
             .from_("debian:buster-slim")
             .with_exec(args=[
                 "sh", "-c", f"""\
 apt-get update -qq \
-&& apt-get install -yqq curl\
-&& curl -L -o {install_tmp_file} https://github.com/vmware/octant/releases/download/v{version}/octant_{version}_Linux-ARM64.deb \
+&& apt-get install -yqq curl \
+&& curl -L -o {install_tmp_file} https://github.com/vmware/octant/releases/download/v{version}/octant_{version}_Linux-{arch}.deb \
 && dpkg -i {install_tmp_file} \
 && rm -f {install_tmp_file} \
 && apt-get autoremove -y \
