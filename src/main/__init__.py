@@ -2,7 +2,7 @@ import asyncio
 from typing import Annotated
 
 import dagger
-from dagger import function, object_type
+from dagger import dag, function, object_type
 from typing_extensions import Doc
 
 from .cluster import Cluster, helm_install
@@ -17,7 +17,7 @@ class DaggerPoc:
     @function
     async def platform(self,
         config: Annotated[dagger.File | None, Doc("The configuration yaml file for the platform.")] = None
-    ) -> dagger.Container:
+    ) -> dagger.Service:
         """
         Create a k3s cluster and deploy some services using helm.
         Outside of the cluster run octant to interact with the cluster.
@@ -31,7 +31,25 @@ class DaggerPoc:
         tasks = [helm_install(kube_config, chart.name, chart.version, chart.repo) for chart in settings.charts]
         await asyncio.gather(*tasks)
         # Run octant dashboard for monitoring the cluster
-        octant = Octant().run(kube_config, settings.octant.version, settings.octant.port)
+        #octant = Octant().run(kube_config, settings.octant.version, settings.octant.port)
+        # Run a web service (postgres DB)
+        # db = (
+        #     dag.container()
+        #     .from_("postgres:15.7")
+        #     .with_exposed_port(5432)
+        #     .with_env_variable("POSTGRES_USER", "postgres")
+        #     .with_env_variable("POSTGRES_PASSWORD", "postgrespw")
+        #     .as_service()
+        # )
+        hello_world = (
+            dag.container()
+            .from_("python")
+            .with_workdir("/srv")
+            .with_new_file("index.html", "Hello, world!")
+            .with_exec(["python", "-m", "http.server", "8080"])
+            .with_exposed_port(8080)
+            .as_service()
+        )
         # Run nginx to expose the services
         nginx = Nginx(settings.nginx.port)
-        return await nginx.run_nginx("octant", octant, settings.octant.port)
+        return await nginx.run_nginx("svc", hello_world, 9001)
