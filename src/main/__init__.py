@@ -6,6 +6,7 @@ from dagger import function, object_type
 from typing_extensions import Doc
 
 from .cluster import Cluster, helm_install
+from .nginx import Nginx
 from .octant import Octant
 from .settings import Settings
 
@@ -16,7 +17,7 @@ class DaggerPoc:
     @function
     async def platform(self,
         config: Annotated[dagger.File | None, Doc("The configuration yaml file for the platform.")] = None
-    ) -> dagger.Service:
+    ) -> dagger.Container:
         """
         Create a k3s cluster and deploy some services using helm.
         Outside of the cluster run octant to interact with the cluster.
@@ -29,5 +30,8 @@ class DaggerPoc:
         # Deploy some services using helm
         tasks = [helm_install(kube_config, chart.name, chart.version, chart.repo) for chart in settings.charts]
         await asyncio.gather(*tasks)
-        # Return a container ready to interact with the cluster
-        return Octant().run(kube_config, settings.octant.version, settings.octant.port)
+        # Run octant dashboard for monitoring the cluster
+        octant = Octant().run(kube_config, settings.octant.version, settings.octant.port)
+        # Run nginx to expose the services
+        nginx = Nginx(settings.nginx.port)
+        return await nginx.run_nginx("octant", octant, settings.octant.port)
