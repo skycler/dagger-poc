@@ -52,4 +52,6 @@ class DaggerPoc:
         )
         # Run nginx to expose the services
         nginx = Nginx(settings.nginx.port)
-        return await nginx.run_nginx("svc", hello_world, 9001)
+        await nginx.add_server("hello-world-1", hello_world, 9001)
+        await nginx.add_server("hello-world-2", hello_world, 9002)
+        return nginx.run()
