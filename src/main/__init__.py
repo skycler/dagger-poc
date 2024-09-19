@@ -6,6 +6,7 @@ from dagger import dag, function, object_type
 from typing_extensions import Doc
 
 from .cluster import Cluster, helm_install
+from .hello_world import make_service
 from .nginx import Nginx
 from .octant import Octant
 from .settings import Settings
@@ -41,17 +42,9 @@ class DaggerPoc:
         #     .with_env_variable("POSTGRES_PASSWORD", "postgrespw")
         #     .as_service()
         # )
-        hello_world = (
-            dag.container()
-            .from_("python")
-            .with_workdir("/srv")
-            .with_new_file("index.html", "Hello, world!")
-            .with_exec(["python", "-m", "http.server", "8080"])
-            .with_exposed_port(8080)
-            .as_service()
-        )
         # Run nginx to expose the services
         nginx = Nginx(settings.nginx.port)
-        await nginx.add_server("hello-world-1", hello_world, 9001)
-        await nginx.add_server("hello-world-2", hello_world, 9002)
+        await nginx.add_server("hello-world-1", make_service(), 9001)
+        await nginx.add_server("hello-world-2", make_service(), 9002)
+        await nginx.add_server("hello-world-3", make_service(), 9003)
         return nginx.run()

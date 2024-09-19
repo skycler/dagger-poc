@@ -3,26 +3,15 @@ from dagger import dag
 
 
 class Nginx:
+    port: int
     container: dagger.Container
+    port_mapping: dict[str, int] = {}
 
     def __init__(self, port: int):
-        config = f"""
-server {{
-    listen {port};
-    location / {{
-        add_header Content-Type text/html;
-        return 200 "<html><body><h1>Hello, World!</h1></body></html>";
-    }}
-}}"""
+        self.port = port
         self.container = (
             dag.container()
             .from_("nginx:1.21.3")
-            .with_exposed_port(port)
-            .with_exec(args=["sh", "-c", f"cat > /etc/nginx/conf.d/root.conf <<EOL\n{config}\nEOL"])
-            .with_exec(args=["sh", "-c", """cat >> /etc/nginx/nginx.conf <<EOL
-stream {
-    include /etc/nginx/server-conf.d/server-*.conf;
-}"""])
         )
     
     async def add_server(self, name: str, service: dagger.Service, port: int) -> None:
@@ -47,10 +36,26 @@ server {{
             .with_exec(args=["sh", "-c", f"cat > /etc/nginx/conf.d/{name}.conf <<EOL\n{config}\nEOL"])
             .with_exposed_port(port, experimental_skip_healthcheck=True)
         )
+        self.port_mapping[name] = port
     
     def run(self) -> dagger.Service:
+        config = f"""
+server {{
+    listen {self.port};
+    location / {{
+        add_header Content-Type text/html;
+        return 200 "<html><body>
+        <h1>List of available ports</h1>
+        <ul>
+        {"".join(f"<li>{name}: {port}</li>" for name, port in self.port_mapping.items())}
+        </ul>
+        </body></html>";
+    }}
+}}"""
         return (
             self.container
+            .with_exposed_port(self.port)
+            .with_exec(args=["sh", "-c", f"cat > /etc/nginx/conf.d/root.conf <<EOL\n{config}\nEOL"])
             .with_exec(args=["nginx", "-g", "daemon off;"])
             .as_service()
         )
