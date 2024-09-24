@@ -40,7 +40,7 @@ apt-get update -qq \
             )
         )
 
-    def run(self, config: dagger.File, version: str, port: int) -> dagger.Service:
+    def run(self, config: dagger.File, version: str, port: int) -> dagger.Container:
         """
         Start the octant dashboard
 
@@ -56,5 +56,4 @@ apt-get update -qq \
             .with_env_variable("OCTANT_LISTENER_ADDR", f"0.0.0.0:{port}")
             .with_exec(args=["/usr/local/bin/octant"])
             .with_exposed_port(port)
-            .as_service()
         )
