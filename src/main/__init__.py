@@ -25,7 +25,7 @@ class DaggerPoc:
         Outside of the cluster run octant to interact with the cluster.
         """
         # Load the settings
-        settings = Settings() if config is None else Settings.from_yaml(await config.contents())
+        settings = Settings.from_file(config)
         # Start a k3s server and get the kubeconfig
         cluster = await Cluster.create("my-cluster")
         kube_config = cluster.config
