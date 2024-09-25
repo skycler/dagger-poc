@@ -1,13 +1,16 @@
 charts:
-- name: nginx
-  version: 18.1.14
-  repo: oci://registry-1.docker.io/bitnamicharts
-- name: rabbitmq
-  version: 14.7.0
-  repo: oci://registry-1.docker.io/bitnamicharts
-- name: postgresql
-  version: 15.5.31
-  repo: oci://registry-1.docker.io/bitnamicharts
-# - name: mp-model-platform-test
-#   version: 0.0.0
-#   repo: oci://host.docker.internal:5001/helm
+# - name: nginx
+#   version: 18.1.14
+#   repo: oci://registry-1.docker.io/bitnamicharts
+# - name: rabbitmq
+#   version: 14.7.0
+#   repo: oci://registry-1.docker.io/bitnamicharts
+# - name: postgresql
+#   version: 15.5.31
+#   repo: oci://registry-1.docker.io/bitnamicharts
+- name: mp-model-platform-test
+  version: 0.0.0
+  repo: oci://host.docker.internal:5001/helm
+  values:
+    global.env: local
+    global.imageRepository: host.docker.internal:5001

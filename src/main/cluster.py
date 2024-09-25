@@ -15,7 +15,7 @@ class Cluster:
         return self.k3s.config()
 
 
-def helm_install(config: dagger.File, chart: str, version: str, repo: str) -> dagger.Container:
+def helm_install(config: dagger.File, chart: str, version: str, repo: str, values: dict[str, str] = {}) -> dagger.Container:
     """
     Install a helm chart from a repository
     
@@ -24,10 +24,14 @@ def helm_install(config: dagger.File, chart: str, version: str, repo: str) -> da
     :param version: The chart version
     :param repo: The repository URL
     """
+
+    args = ["helm", "upgrade", "--namespace", chart, "--install", "--wait", "--atomic", "--create-namespace", "--debug", chart, chart, "--version", version]
+    for key, value in values.items():
+        args.extend(["--set", f"{key}={value}"])
     return (
         deployer(config)
         .with_exec(args=["helm", "pull", f"{repo}/{chart}", "--version", version, "--untar", "--plain-http"])
-        .with_exec(args=["helm", "install", "--wait", "--debug", chart, chart])
+        .with_exec(args=args)
     )
 
 def deployer(config: dagger.File) -> dagger.Container:

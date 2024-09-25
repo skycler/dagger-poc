@@ -8,18 +8,19 @@ class Octant(BaseModel):
 	port: int = Field(default = 9000, description="The port to expose")
 
 class Chart(BaseModel):
-	name: str
-	version: str
-	repo: str
+	name: str = Field(description="The name of the helm chart")
+	version: str = Field(description="The version of the helm chart")
+	repo: str = Field(description="The repository URL of the helm chart")
+	values: dict[str, str] = Field(default = {}, description="The values to pass to the helm chart")
 
 class Settings(BaseModel):
 	octant: Octant = Field(default = Octant(), description="The octant settings")
 	charts: list[Chart] = Field(default = [], description="The charts to deploy")
 
 	@staticmethod
-	def from_file(file: dagger.File | None) -> "Settings":
+	async def from_file(file: dagger.File | None) -> "Settings":
 		if file is None:
 			return Settings()
 		else:
-			yaml = file.contents().result()
+			yaml = await file.contents()
 			return Settings(**safe_load(yaml))
