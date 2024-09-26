@@ -1,10 +1,21 @@
+local_registry_acronym: local-registry
 charts:
+# - name: mp-model-platform-test
+#   version: 0.0.0
+#   registry: local-registry
+#   path: helm
+#   values:
+#     global.env: local
+#     global.imageRepository: local-registry
 - name: nginx
   version: 18.1.14
-  repo: oci://registry-1.docker.io/bitnamicharts
+  registry: registry-1.docker.io
+  path: bitnamicharts
 - name: rabbitmq
   version: 14.7.0
-  repo: oci://registry-1.docker.io/bitnamicharts
+  registry: registry-1.docker.io
+  path: bitnamicharts
 - name: postgresql
   version: 15.5.31
-  repo: oci://registry-1.docker.io/bitnamicharts
+  registry: registry-1.docker.io
+  path: bitnamicharts

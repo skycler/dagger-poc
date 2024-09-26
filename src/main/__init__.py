@@ -25,19 +25,25 @@ class DaggerPoc:
         Create a k3s cluster and deploy some services using helm.
         Outside of the cluster run octant to interact with the cluster.
         """
+        repo = await registry.endpoint()
         # Load the settings
-        settings = Settings.from_file(config)
+        settings = await Settings.from_file(config)
+        settings.resolve_local_registry(repo)
         # Start a k3s server and get the kubeconfig
         cluster = await Cluster.create("my-cluster")
         kube_config = cluster.config
         # Deploy some services using helm
-        tasks = [helm_install(kube_config, chart.name, chart.version, chart.repo) for chart in settings.charts]
+        tasks = [helm_install(kube_config,
+            chart.name, chart.version,
+            f"{chart.registry}/{chart.path}", chart.values
+        ) for chart in settings.charts]
         await asyncio.gather(*tasks)
+        # return the container to interact with the cluster
         if is_dev:
             # Run the container with kubectl and helm to interact with the cluster
             return (
                 deployer(kube_config)
-                .with_env_variable("REGISTRY", await registry.endpoint())
+                .with_env_variable("REGISTRY", repo)
             )
         else:
             # Run octant dashboard for monitoring the cluster
