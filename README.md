@@ -10,7 +10,7 @@ Since everything in dagger runs in containers, the only prerequisites are docker
 Run deploy helm charts in config.yaml ti the k3s cluster and run octant on top
 ```dagger call platform --config config.yaml as-service up```
 Once the platform is up, open `localhost:9000`. If you want a shell to interact with the cluster instead of running octant, run
-```dagger call platform --config config.yaml --is-dev=True terminal```
+```dagger call platform --registry=<registry-address> --is-dev=True terminal``` where `<registry-address>` is the tcp address of your local docker registry, e.g. tcp://localhost:5001
 
 Another use-case is runing a nginx server as reverse-proxy for other services.
 ```dagger call nginx --n-services=7 up```

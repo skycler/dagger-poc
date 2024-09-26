@@ -8,6 +8,3 @@ charts:
 - name: postgresql
   version: 15.5.31
   repo: oci://registry-1.docker.io/bitnamicharts
-# - name: mp-model-platform-test
-#   version: 0.0.0
-#   repo: oci://host.docker.internal:5001/helm

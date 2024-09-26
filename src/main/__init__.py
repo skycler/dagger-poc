@@ -17,6 +17,7 @@ class DaggerPoc:
 
     @function
     async def platform(self,
+        registry: Annotated[dagger.Service, Doc("The local registry endpoint (<host>:<port>) to pull the images and charts from.")],
         config: Annotated[dagger.File | None, Doc("The configuration yaml file for the platform.")] = None,
         is_dev: Annotated[bool, Doc("Whether to run the platform in development mode.")] = False
     ) -> dagger.Container:
@@ -34,7 +35,10 @@ class DaggerPoc:
         await asyncio.gather(*tasks)
         if is_dev:
             # Run the container with kubectl and helm to interact with the cluster
-            return deployer(kube_config)
+            return (
+                deployer(kube_config)
+                .with_env_variable("REGISTRY", await registry.endpoint())
+            )
         else:
             # Run octant dashboard for monitoring the cluster
             return Octant().run(kube_config, settings.octant.version, settings.octant.port)
