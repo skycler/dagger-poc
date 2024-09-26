@@ -15,7 +15,7 @@ class Chart(BaseModel):
 	values: dict[str, str] = Field(default = {}, description="The values to pass to the chart")
 
 class Settings(BaseModel):
-	local_registry_acronym: str = Field(..., description="The acronym for the local registry")
+	local_registry_acronym: str | None = Field(default = None, description="The acronym for the local registry")
 	octant: Octant = Field(default = Octant(), description="The octant settings")
 	charts: list[Chart] = Field(default = [], description="The charts to deploy")
 
@@ -38,12 +38,13 @@ class Settings(BaseModel):
 
 		:param local_registry: The local registry URL
 		"""
-		for chart in self.charts:
-			# for chart registries
-			if chart.registry == self.local_registry_acronym:
-				chart.registry = local_registry
-			# for values
-			for key, value in chart.values.items():
-				if value == self.local_registry_acronym:
-					chart.values[key] = local_registry
+		if self.local_registry_acronym is not None:
+			for chart in self.charts:
+				# for chart registries
+				if chart.registry == self.local_registry_acronym:
+					chart.registry = local_registry
+				# for values
+				for key, value in chart.values.items():
+					if value == self.local_registry_acronym:
+						chart.values[key] = local_registry
 			
