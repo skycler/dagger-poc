@@ -5,7 +5,7 @@ import dagger
 from dagger import function, object_type
 from typing_extensions import Doc
 
-from .cluster import Cluster, helm_install, deployer
+from .cluster import Cluster
 from .hello_world import make_service
 from .nginx import Nginx
 from .octant import Octant
@@ -26,28 +26,23 @@ class DaggerPoc:
         Outside of the cluster run octant to interact with the cluster.
         """
         repo = await registry.endpoint()
-        # Load the settings
-        settings = await Settings.from_file(config)
-        settings.resolve_local_registry(repo)
         # Start a k3s server and get the kubeconfig
-        cluster = await Cluster.create("my-cluster")
-        kube_config = cluster.config
+        cluster = await Cluster.create("my-cluster", repo)
+        # Load the settings
+        settings = await Settings.from_file(config, with_registry=repo)
         # Deploy some services using helm
-        tasks = [helm_install(kube_config,
-            chart.name, chart.version,
-            f"{chart.registry}/{chart.path}", chart.values
-        ) for chart in settings.charts]
+        tasks = [cluster.install_chart(chart) for chart in settings.charts]
         await asyncio.gather(*tasks)
         # return the container to interact with the cluster
         if is_dev:
             # Run the container with kubectl and helm to interact with the cluster
             return (
-                deployer(kube_config)
+                cluster.deployer()
                 .with_env_variable("REGISTRY", repo)
             )
         else:
             # Run octant dashboard for monitoring the cluster
-            return Octant().run(kube_config, settings.octant.version, settings.octant.port)
+            return Octant().run(cluster.k3s.config(), settings.octant.version, settings.octant.port)
 
     @function
     async def nginx(self,

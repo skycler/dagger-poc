@@ -4,6 +4,7 @@ charts:
 #   version: 0.0.0
 #   registry: local-registry
 #   path: helm
+#   namespace: mp-model-platform-test
 #   values:
 #     global.env: local
 #     global.imageRepository: local-registry
