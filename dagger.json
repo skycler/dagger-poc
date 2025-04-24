@@ -1,12 +1,14 @@
 {
   "name": "dagger-poc",
-  "sdk": "python",
+  "engineVersion": "v0.18.4",
+  "sdk": {
+    "source": "python"
+  },
   "dependencies": [
     {
       "name": "k3s",
-      "source": "github.com/marcosnils/daggerverse/k3s@6ebe41f68dbab3b0a5a10bc312216dec590ed720"
+      "source": "github.com/marcosnils/daggerverse/k3s@6ebe41f68dbab3b0a5a10bc312216dec590ed720",
+      "pin": "6ebe41f68dbab3b0a5a10bc312216dec590ed720"
     }
-  ],
-  "source": ".",
-  "engineVersion": "v0.13.0"
+  ]
 }
